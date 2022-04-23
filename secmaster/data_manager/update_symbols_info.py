@@ -28,14 +28,6 @@ def update_symbols_info(s):
     logger.info(f"Ready to update {len(symbols_to_update)} symbol's info.")
     counter = 0
     for each_symbol in symbols_to_update:
-        progressbar_print(
-            counter,
-            len(symbols_to_update),
-            prefix="Progress:",
-            suffix="Complete",
-            length=50,
-        )
-
         # Get the data from yahoo
         info = get_symbol_info(each_symbol)
         if info is not None:
@@ -58,9 +50,10 @@ def update_symbols_info(s):
                 s.execute(update_symbol_stmt)
                 s.commit()
             except exc.SQLAlchemyError:
-                logger.error(f"Error updating symbol: {each_symbol}, moving on.")
+                logger.warning(f"Error updating symbol: {each_symbol}, moving on.")
                 continue
 
+        progressbar_print(counter, len(symbols_to_update))
         counter += 1
 
     logger.info(f"Done updating {counter} symbol's info.")
@@ -73,4 +66,4 @@ if __name__ == "__main__":
 
     update = update_symbols_info(db_session)
     db_session.close()
-    print(update)
+    
