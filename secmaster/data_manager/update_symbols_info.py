@@ -54,15 +54,14 @@ def update_symbols_info(s):
                 )
             )
 
-            counter += 1
-
             try:
                 s.execute(update_symbol_stmt)
                 s.commit()
             except exc.SQLAlchemyError:
-                logger.error(
-                    f"Error updating symbol: {each_symbol}, moving on.")
+                logger.error(f"Error updating symbol: {each_symbol}, moving on.")
                 continue
+
+        counter += 1
 
     logger.info(f"Done updating {counter} symbol's info.")
     return True
