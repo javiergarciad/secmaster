@@ -143,4 +143,4 @@ cython_debug/
 # Additionals
 .idea/
 .vscode/
-.assets/
+assets/
