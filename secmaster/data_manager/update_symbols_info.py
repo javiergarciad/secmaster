@@ -1,11 +1,10 @@
 import logging
 from datetime import datetime
 
-from sqlalchemy import select, and_, update, exc
-
 from secmaster.common.tools import DatabaseConnector, progressbar_print
 from secmaster.data_manager.nasdaq_symbols import get_symbol_info
 from secmaster.db.models import Symbol
+from sqlalchemy import and_, exc, select, update
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

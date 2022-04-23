@@ -8,11 +8,9 @@ import holidays
 import pytz
 from sqlalchemy import func
 
-
-from db.models import Bar, Symbol
-from common.tools import DatabaseConnector
-
-from tda_client.tda_client import get_tda_client
+from secmaster.db.models import Bar, Symbol
+from secmaster.common.tools import DatabaseConnector
+from secmaster.tda_client.tda_client import get_tda_client
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
