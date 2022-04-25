@@ -19,7 +19,7 @@ def update_symbols_info(s):
     logger.info("update symbol info initialized.")
 
     stmt = select(Symbol.id).where(
-        and_(Symbol.industry == None, Symbol.quote_type == None)
+        and_(Symbol.quote_type == None)
     )
     query = s.execute(stmt).all()
     symbols_to_update = [x[0] for x in query]
@@ -51,9 +51,10 @@ def update_symbols_info(s):
             except exc.SQLAlchemyError:
                 logger.warning(f"Error updating symbol: {each_symbol}, moving on.")
                 continue
-
-        progressbar_print(counter, len(symbols_to_update))
+        
         counter += 1
+        progressbar_print(counter, len(symbols_to_update))
+        
 
     logger.info(f"Done updating {counter} symbol's info.")
     return True
