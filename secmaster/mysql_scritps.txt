@@ -1,1 +1,0 @@
-Select count(*) from symbols where to_update=0;
