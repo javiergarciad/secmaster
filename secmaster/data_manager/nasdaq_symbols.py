@@ -161,6 +161,7 @@ def update_database_symbols(s, filepath, cols, exclude_characters, provider_id):
                             id=symbol,
                             name=name,
                             provider=provider_id,
+                            to_update=True
                         )
                     )
                     new_symbols += 1

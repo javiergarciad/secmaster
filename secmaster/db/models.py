@@ -1,8 +1,11 @@
 import datetime
+from email.policy import default
+from xmlrpc.client import Boolean
 
 from sqlalchemy import (
     Column,
     Integer,
+    Boolean,
     String,
     DateTime,
     Numeric,
@@ -45,6 +48,7 @@ class Symbol(Base):
     industry = Column(String(255))
     quote_type = Column(String(255))
     provider = Column(String(55), ForeignKey("providers.id"))
+    to_update = Column(Boolean, default=True)
     last_updated = Column(DateTime, default=datetime.datetime.utcnow)
     earnings = relationship("EarningDate")
     candles = relationship("Bar")

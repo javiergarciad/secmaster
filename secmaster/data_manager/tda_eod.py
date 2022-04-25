@@ -10,7 +10,7 @@ import pytz
 from secmaster.common.tools import DatabaseConnector, progressbar_print
 from secmaster.db.models import Bar, Symbol
 from secmaster.tda_client.tda_client import get_tda_client
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -78,10 +78,10 @@ def sanitize_response(resp):
     :return: corrected resp
     """
 
-    resp=resp.json()
+    resp = resp.json()
 
-    if resp["empty"] == True:
-        return None
+    # if resp["empty"] == True:
+    #     return None
 
     ans = []
     for d in resp["candles"]:
@@ -220,7 +220,7 @@ def get_symbols_to_update(s, unwanted):
     return symbols
 
 
-def get_dates_for_update(symbol):
+def get_dates_for_update(symbol, date_to=None):
     """
     Compute the dates for a bar update
     from last update + 1 until last working day in the U.S.
@@ -228,23 +228,43 @@ def get_dates_for_update(symbol):
     :param symbol: symbol str
     :return: date_from, date_to
     """
-    
+
     last_candle_date = get_last_candle(session, each_symbol, "date")
 
     if last_candle_date is None:
         return None, None
     else:
         date_from = last_candle_date + timedelta(days=1)
-        date_to = previous_working_day(datetime.datetime.utcnow()).replace(
-        hour=5, minute=0, second=0, microsecond=0)
-
+        if date_to is None:
+            date_to = previous_working_day(datetime.datetime.utcnow())
         
+        date_to = date_to = date_to.replace(
+                hour=5, minute=0, second=0, microsecond=0
+            )
+
         return date_from, date_to
 
+
+def update_symbol_to_update_status(s, symbol, status):
+    """
+    Modify the to_update status for a symbol
+
+    :param s: _description_
+    :param symbol: _description_
+    :param status: _description_
+    :return: _description_
+    """
+    stmt = update(Symbol).where(Symbol.id == symbol).values(to_update=status)
+    s.execute(stmt)
+    s.commit()
+    return True
 
 
 if __name__ == "__main__":
     start_time = datetime.datetime.now()
+
+    date_to = datetime.datetime(day=22, month=4, year=2022)
+
     logger.info("Starting to update market data")
     unwanted = ["CEI", "DCTH", "RSLS", "TOPS", "UVXY", "GMGI"]
     session = DatabaseConnector().session()
@@ -256,9 +276,16 @@ if __name__ == "__main__":
     logger.info(f"Ready to update {len(symbols)} symbols")
     counter = 0
     for each_symbol in symbols:
+        # Only update if the symbol's to_update is TRUE
+        to_update_status = session.execute(
+            select(Symbol.to_update).where(Symbol.id == each_symbol)
+        ).first()[0]
+        if not to_update_status:
+            counter += 1
+            progressbar_print(counter, len(symbols))
+            continue
 
-        date_from, date_to = get_dates_for_update(each_symbol)
-        
+        date_from, date_to = get_dates_for_update(each_symbol, date_to)
         # Only can update if dates are in the past
         if date_from is not None:
             if date_from >= date_to:
@@ -266,11 +293,13 @@ if __name__ == "__main__":
                 progressbar_print(counter, len(symbols))
                 continue
 
-
         response = get_tda_prices(tda_client, each_symbol, date_from, date_to)
 
-        if response is None:
-            continue
+        if response["empty"] == True:
+            # if response is empty could be an old symbol, not longer trading so
+            # no need for query.
+            # Change Symbol.to_update if you need to query a symbol
+            update_symbol_to_update_status(session, each_symbol, False)
         else:
             update_bars(session, each_symbol, response["candles"])
 
@@ -284,8 +313,6 @@ if __name__ == "__main__":
             time.sleep(3)
         else:
             time.sleep(0.2)
-
-
 
     session.close()
     elapsed_time = datetime.datetime.now() - start_time
