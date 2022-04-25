@@ -1,1 +1,4 @@
-Select * from symbols where symbols.id = "AGGH";
+Select * from symbols where symbols.id = "AACI";
+
+
+Select * from bars where bars.symbol_id = "AACI";
