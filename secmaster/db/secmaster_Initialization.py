@@ -14,9 +14,7 @@ logger.info("Starting Securities Master database initialization.")
 s = DatabaseConnector(db_name="SECMASTER").session()
 try:
     to_add = [
-        Provider(id="YAHOO"),
         Provider(id="TDA"),
-        Provider(id="NASDAQ"),
         Interval(id="EOD"),
     ]
     s.add_all(to_add)
