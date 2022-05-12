@@ -23,10 +23,10 @@ def get_tda_client():
         with webdriver.Firefox(executable_path=geckopath) as driver:
             # The TDA-API package is kind of communicative, a lot of logging msgs.
             # I decided to switch most of them from INFO to DEBUG on the enviroment I am
-            # working. A matter of personal taste. 
+            # working. A matter of personal taste.
             # Unfortunatly the package has not a verbose setting, so I cant doing programaticly
             # If you wish to make the same in your enviroment, go to:
-            # ../tda/auth.py and modify 
+            # ../tda/auth.py and modify
 
             c = auth.client_from_login_flow(driver, API_KEY, REDIRECT_URI, TOKEN_PATH)
 

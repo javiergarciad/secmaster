@@ -36,6 +36,7 @@ def download_nasdaq_files(
     logging.info("Starting to download {} NASDAQ files".format(
         len(filenames_list)))
 
+
     ftp = ftp_server(ftp_host, ftp_dir, ftp_user, ftp_pass)
 
     for each_file in filenames_list:
