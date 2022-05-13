@@ -19,13 +19,13 @@ FILES = [
         "filename": "nasdaqlisted.txt",
         "cols": [0, 1, 3],
         "provider": "NASDAQ",
-        "exclude": ["$", "."],
+        "exclude": ["$"],   # exclude symbols with these characters
     },
     {
         "filename": "otherlisted.txt",
         "cols": [0, 1, 6],
         "provider": "NASDAQ",
-        "exclude": ["$", "."],
+        "exclude": ["$"],  # exclude symbols with these characters
     },
 ]
 
@@ -33,9 +33,7 @@ FILES = [
 def download_nasdaq_files(
     ftp_host, ftp_dir, ftp_user, ftp_pass, filenames_list, destination_dir
 ):
-    logging.info("Starting to download {} NASDAQ files".format(
-        len(filenames_list)))
-
+    logging.info("Starting to download {} NASDAQ files".format(len(filenames_list)))
 
     ftp = ftp_server(ftp_host, ftp_dir, ftp_user, ftp_pass)
 
@@ -71,7 +69,6 @@ def exclude_symbol(string, exclude_list):
     for i in string:
         if i in exclude_list:
             return True
-
     return False
 
 
@@ -97,9 +94,7 @@ def validate_provider(s, filename, provider_id):
 
 
 def get_symbol_info(symbol):
-    """
-
-    """
+    """ """
 
     ticket = yf.Ticker(symbol)
     i = ticket.info
@@ -110,6 +105,20 @@ def get_symbol_info(symbol):
         return i
     except KeyError:
         return None
+
+
+def sanitize_symbol_nasdaq_to_tda(symbol):
+    """Some characters in the symbols string are different between NASDAQ files and TDA
+
+
+    Args:
+        symbols (str): str for NASDAQ symbol
+
+    Returns:
+        str: str of TDA equivalent symbol
+    """
+    # . for /
+    return symbol.replace(".", "/")
 
 
 def update_database_symbols(s, filepath, cols, exclude_characters, provider_id):
@@ -144,13 +153,11 @@ def update_database_symbols(s, filepath, cols, exclude_characters, provider_id):
     for row in data.itertuples(index=False):
         # print some nice progress bar
         total_counter += 1
-        progressbar_print(
-            total_counter, len(data), prefix="Progress:", suffix="Complete", length=50
-        )
+        progressbar_print(total_counter, len(data))
 
         if row[2] == "N":
             name = row[1][0:99]
-            symbol = row[0]
+            symbol = sanitize_symbol_nasdaq_to_tda(row[0])
 
             if symbol not in symbols_in_db:
                 if exclude_symbol(symbol, exclude_characters):
@@ -159,10 +166,7 @@ def update_database_symbols(s, filepath, cols, exclude_characters, provider_id):
                     # create new symbol
                     symbols_to_add.append(
                         Symbol(
-                            id=symbol,
-                            name=name,
-                            provider=provider_id,
-                            to_update=True
+                            id=symbol, name=name, provider=provider_id, to_update=True
                         )
                     )
                     new_symbols += 1
@@ -197,11 +201,12 @@ if __name__ == "__main__":
     """
     DOWNLOAD = True
 
+
     # database session
     db_session = DatabaseConnector().session()
 
     # where downloaded files are to be stored
-    destination = Path(get_project_root(), "assets", "nasdaq")
+    destination = Path(get_project_root(), "assets", "symbols_directory")
     destination.mkdir(parents=True, exist_ok=True)
 
     # download the files
